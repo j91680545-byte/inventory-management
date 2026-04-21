@@ -4,8 +4,26 @@
       <h2>{{ t('dashboard.title') }}</h2>
     </div>
 
-    <!-- TODO: Low stock alert banner goes here -->
-    <!-- Show dismissible banner when items are below reorder point, linking to /inventory -->
+    <!-- Low Stock Alert Banner -->
+    <div v-if="lowStockCount > 0 && !bannerDismissed" class="low-stock-banner">
+      <div class="banner-content">
+        <svg class="warning-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M8.485 3.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 3.495zM10 6a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 6zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+        </svg>
+        <div class="banner-message">
+          <span class="banner-title">{{ t('dashboard.lowStock.title') }}</span>
+          <span class="banner-description">
+            {{ lowStockCount }} {{ lowStockCount === 1 ? t('dashboard.lowStock.itemSingular') : t('dashboard.lowStock.itemPlural') }} {{ t('dashboard.lowStock.belowReorderPoint') }}
+          </span>
+        </div>
+        <router-link to="/inventory" class="banner-action">{{ t('dashboard.lowStock.viewInventory') }}</router-link>
+        <button @click="dismissBanner" class="banner-dismiss" :aria-label="t('common.dismiss')">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+          </svg>
+        </button>
+      </div>
+    </div>
 
     <div v-if="loading" class="loading">{{ t('common.loading') }}</div>
     <div v-else-if="error" class="error">{{ error }}</div>
@@ -307,12 +325,14 @@ import { useI18n } from '../composables/useI18n'
 import { formatCurrency } from '../utils/currency'
 import ProductDetailModal from '../components/ProductDetailModal.vue'
 import BacklogDetailModal from '../components/BacklogDetailModal.vue'
+import PurchaseOrderModal from '../components/PurchaseOrderModal.vue'
 
 export default {
   name: 'Dashboard',
   components: {
     ProductDetailModal,
     BacklogDetailModal,
+    PurchaseOrderModal,
   },
   setup() {
     const { t, currentCurrency, translateProductName, translateWarehouse } = useI18n()
@@ -321,6 +341,9 @@ export default {
     const summary = ref({})
     const allOrders = ref([])
     const inventoryItems = ref([])
+
+    // Low stock banner state
+    const bannerDismissed = ref(false)
 
     // Modal state
     const showProductModal = ref(false)
@@ -342,6 +365,13 @@ export default {
 
     const ordersData = ref({ fulfilled: 187, goal: 200 })
     const fillRate = ref(96.8)
+
+    // Low stock count
+    const lowStockCount = computed(() => {
+      return inventoryItems.value.filter(item => 
+        item.quantity_on_hand < item.reorder_point
+      ).length
+    })
 
     const revenueGoal = computed(() => {
       // $800K per month, so if looking at all months (12 months), goal is 12 * 800K = 9.6M
@@ -675,6 +705,10 @@ export default {
       showPOModal.value = false
     }
 
+    const dismissBanner = () => {
+      bannerDismissed.value = true
+    }
+
     // Watch for filter changes and reload data
     watch([selectedPeriod, selectedLocation, selectedCategory, selectedStatus], () => {
       loadData()
@@ -723,7 +757,10 @@ export default {
       poModalMode,
       openPOModal,
       viewPO,
-      handlePOCreated
+      handlePOCreated,
+      lowStockCount,
+      bannerDismissed,
+      dismissBanner
     }
   }
 }
@@ -1270,5 +1307,91 @@ export default {
   background: #475569;
   transform: translateY(-1px);
   box-shadow: 0 2px 4px rgba(100, 116, 139, 0.3);
+}
+
+/* Low Stock Alert Banner */
+.low-stock-banner {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border: 1px solid #f59e0b;
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 4px rgba(245, 158, 11, 0.1);
+}
+
+.banner-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.warning-icon {
+  width: 24px;
+  height: 24px;
+  color: #f59e0b;
+  flex-shrink: 0;
+}
+
+.banner-message {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.banner-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #0f172a;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.banner-description {
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+.banner-action {
+  padding: 0.5rem 1rem;
+  background: #f59e0b;
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 0.813rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.banner-action:hover {
+  background: #d97706;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
+}
+
+.banner-dismiss {
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.banner-dismiss:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.banner-dismiss svg {
+  width: 16px;
+  height: 16px;
 }
 </style>

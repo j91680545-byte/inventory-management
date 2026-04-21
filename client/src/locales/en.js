@@ -69,6 +69,13 @@ export default {
       firstOrder: 'First Order',
       inStock: 'In Stock',
       lowStock: 'Low Stock'
+    },
+    lowStock: {
+      title: 'Low Stock Alert',
+      itemSingular: 'item',
+      itemPlural: 'items',
+      belowReorderPoint: 'below reorder point',
+      viewInventory: 'View Inventory'
     }
   },
 
@@ -323,6 +330,7 @@ export default {
     search: 'Search',
     filter: 'Filter',
     export: 'Export',
-    items: 'items'
+    items: 'items',
+    dismiss: 'Dismiss'
   }
 }
