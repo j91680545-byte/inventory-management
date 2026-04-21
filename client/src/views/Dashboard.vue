@@ -4,6 +4,9 @@
       <h2>{{ t('dashboard.title') }}</h2>
     </div>
 
+    <!-- TODO: Low stock alert banner goes here -->
+    <!-- Show dismissible banner when items are below reorder point, linking to /inventory -->
+
     <div v-if="loading" class="loading">{{ t('common.loading') }}</div>
     <div v-else-if="error" class="error">{{ error }}</div>
     <div v-else>
