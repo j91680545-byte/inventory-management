@@ -69,6 +69,13 @@ export default {
       firstOrder: '初回注文',
       inStock: '在庫あり',
       lowStock: '在庫僅少'
+    },
+    lowStock: {
+      title: '在庫不足警告',
+      itemSingular: '品目',
+      itemPlural: '品目',
+      belowReorderPoint: 'が再注文点を下回っています',
+      viewInventory: '在庫を表示'
     }
   },
 
@@ -323,7 +330,8 @@ export default {
     search: '検索',
     filter: 'フィルター',
     export: 'エクスポート',
-    items: '件'
+    items: '件',
+    dismiss: '閉じる'
   },
 
   // Product Names
